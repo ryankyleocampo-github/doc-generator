@@ -10,11 +10,6 @@ import string
 class DocGenerator:
     """Class to handle the document generation logic."""
 
-    def sanitize_company_name(self, company_name):
-        # Method to remove punctuation and spaces from the company name
-        sanitized_name = company_name.translate(str.maketrans('', '', string.punctuation))
-        return sanitized_name.replace(' ', '')
-
     def generate_document(self, template_path, meeting_details):
         try:
             document = Document(template_path)
@@ -23,10 +18,19 @@ class DocGenerator:
             if 'logo' in meeting_details and meeting_details['logo']:
                 self.insert_image(document, meeting_details['logo'], '[LOGO]')
 
-            # Then, replace text placeholders
+            # Replace text placeholders in the document body
             for paragraph in document.paragraphs:
                 for key, value in meeting_details.items():
-                    if key != 'logo':  # Skip the logo key since it's already handled
+                    if key != 'logo':  # Skip the logo key
+                        placeholder = f'[{key.upper()}]'
+                        if placeholder in paragraph.text:
+                            paragraph.text = paragraph.text.replace(placeholder, value)
+
+            # Replace placeholders in the footer
+            for section in document.sections:
+                footer = section.footer
+                for paragraph in footer.paragraphs:
+                    for key, value in meeting_details.items():
                         placeholder = f'[{key.upper()}]'
                         if placeholder in paragraph.text:
                             paragraph.text = paragraph.text.replace(placeholder, value)
@@ -64,12 +68,12 @@ class DocGenerator:
             print(f"Placeholder '{placeholder}' not found in the document headers.")
 
     def save_document(self, document, company_name):
-        # Sanitize the company name
-        sanitized_company_name = self.sanitize_company_name(company_name)
+        # Sanitize the company name to remove punctuation but retain spaces
+        sanitized_company_name = self.remove_punctuation(company_name)
 
-        # Generate a unique filename using a timestamp
-        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        filename = f"{timestamp} {sanitized_company_name} BOARD MEETINGS.docx"
+        # Generate a filename using the current date
+        date_str = datetime.datetime.now().strftime("%Y-%m-%d")
+        filename = f"{date_str} {sanitized_company_name} Board Meetings.docx"
         file_path = os.path.join("generated_docs", filename)
 
         # Ensure the directory exists
@@ -80,8 +84,18 @@ class DocGenerator:
         document.save(file_path)
         return file_path
 
+    def remove_punctuation(self, text):
+        # Method to remove punctuation from text but retain spaces
+        return text.translate(str.maketrans('', '', string.punctuation))
+
+    def sanitize_company_name(self, company_name):
+        # Original method to remove punctuation and spaces from the company name
+        sanitized_name = company_name.translate(str.maketrans('', '', string.punctuation))
+        return sanitized_name.replace(' ', '')
+
+
 class DocGeneratorApp(QMainWindow):
-    DEFAULT_LOGO_PATH = 'assets/Grow Bliss Logo.png'
+    DEFAULT_LOGO_PATH = 'assets/logo.png'
 
     def __init__(self):
         super().__init__()
@@ -107,7 +121,7 @@ class DocGeneratorApp(QMainWindow):
 
         # Logo Selection
         self.logo_selection = QComboBox()
-        self.logo_selection.addItems(['Default Logo', 'Upload Logo'])
+        self.logo_selection.addItems(['Logo', 'Upload Logo'])
         self.logo_selection.currentIndexChanged.connect(self.on_logo_selection_changed)
         form_layout.addRow('Select Logo:', self.logo_selection)
 
@@ -118,7 +132,7 @@ class DocGeneratorApp(QMainWindow):
 
         # Company Selection Combo Box
         self.company_selection = QComboBox()
-        self.company_selection.addItems(['Grow Bliss, LLC', 'Grow Group LLC', 'Grow Management LP', 'Grow Investments LLC', 'Peoples Realty INC', 'Other...'])
+        self.company_selection.addItems(['Ryan Kyle', 'imnotrk', '6AMG', 'Aqua Fish Villa', 'TL Pet Shop', 'Other...'])
         self.company_selection.currentIndexChanged.connect(self.on_company_selection_changed)
         form_layout.addRow('Select Company:', self.company_selection)
 
@@ -128,26 +142,41 @@ class DocGeneratorApp(QMainWindow):
         self.custom_company_input.hide()
         form_layout.addRow(self.custom_company_input)
 
+        # Company Address Selection
+        self.company_address_selection = QComboBox()
+        self.company_address_selection.addItems([
+            'Sample address 1, State US 12345',
+            'Sample address 2, State US 12345',
+            'Sample address 3, State US 12345',
+            'Other...'
+        ])
+        form_layout.addRow('Company Address:', self.company_address_selection)
+
+        self.custom_company_address_input = QLineEdit()
+        self.custom_company_address_input.setPlaceholderText("Enter custom company address")
+        self.custom_company_address_input.hide()
+        form_layout.addRow(self.custom_company_address_input)
+
         # Meeting Type Selection
         self.meeting_type_selection = QComboBox()
         self.meeting_type_selection.addItems(['Annual Board Meeting', 'Special Board Meeting'])
         form_layout.addRow('Meeting Type:', self.meeting_type_selection)
 
-        # Attendees List
-        self.attendees_list = QListWidget()
-        self.attendees_list.addItem('Chairman of the Board')
-        form_layout.addRow('Attendees:', self.attendees_list)
+        # # Attendees List
+        # self.attendees_list = QListWidget()
+        # self.attendees_list.addItem('Chairman of the Board')
+        # form_layout.addRow('Attendees:', self.attendees_list)
 
-        self.new_attendee_input = QLineEdit()
-        self.new_attendee_input.setPlaceholderText("Enter attendee's name")
-        form_layout.addRow(self.new_attendee_input)
+        # self.new_attendee_input = QLineEdit()
+        # self.new_attendee_input.setPlaceholderText("Enter attendee's name")
+        # form_layout.addRow(self.new_attendee_input)
 
-        self.add_attendee_button = QPushButton('Add Attendee', self)
-        self.add_attendee_button.clicked.connect(self.add_attendee)
-        form_layout.addRow(self.add_attendee_button)
+        # self.add_attendee_button = QPushButton('Add Attendee', self)
+        # self.add_attendee_button.clicked.connect(self.add_attendee)
+        # form_layout.addRow(self.add_attendee_button)
 
         # Chairman Name
-        self.chairman_name_input = QLineEdit('Jeffery James Peoples')
+        self.chairman_name_input = QLineEdit('Ryan Kyle Ocampo')
         form_layout.addRow('Chairman Name:', self.chairman_name_input)
 
         # Separate Date Input
@@ -168,26 +197,12 @@ class DocGeneratorApp(QMainWindow):
 
         self.time_selection.currentIndexChanged.connect(self.handleTimeSelection)
 
-        # Address Selection 
-        self.company_address_selection = QComboBox()
-        self.company_address_selection.addItems([
-            '4000 NW 74th St, Coconut Creek FL 33073',
-            '99 Spring Lake Drive #102 Vero Beach FL 33073',
-            '300 Franklin St, Cambridge MA 02139',
-            'Other...'
-        ])
-        form_layout.addRow('Company Address:', self.company_address_selection)
-
-        self.custom_company_address_input = QLineEdit()
-        self.custom_company_address_input.setPlaceholderText("Enter custom company address")
-        self.custom_company_address_input.hide()
-        form_layout.addRow(self.custom_company_address_input)
-
+        # Meeting Address Selection
         self.meeting_address_selection = QComboBox()
         self.meeting_address_selection.addItems([
-            '4000 NW 74th St, Coconut Creek FL 33073',
-            '99 Spring Lake Drive #102 Vero Beach FL 33073',
-            '300 Franklin St, Cambridge MA 02139',
+            'Sample address 1, State US 12345',
+            'Sample address 2, State US 12345',
+            'Sample address 3, State US 12345',
             'Other...'
         ])
         form_layout.addRow('Meeting Address:', self.meeting_address_selection)
@@ -197,18 +212,8 @@ class DocGeneratorApp(QMainWindow):
         self.custom_meeting_address_input.hide()
         form_layout.addRow(self.custom_meeting_address_input)
 
-        # State Input - Initialize after company address selection
-        self.state_input = QLineEdit()
-        form_layout.addRow('State:', self.state_input)
-        
-        # Connect to update state input after state input is created
-        self.company_address_selection.currentIndexChanged.connect(self.update_state_input)
-
-        # Initial call to set the default state
-        self.update_state_input()
-
         # Discussion, Resolutions, and Closing Remarks
-        self.discussion_input = QTextEdit('Discuss business conditions and future plans.')
+        self.discussion_input = QTextEdit('Discuss business conditions and plans.')
         form_layout.addRow('Discussion:', self.discussion_input)
 
         self.resolutions_input = QTextEdit()
@@ -263,11 +268,11 @@ class DocGeneratorApp(QMainWindow):
         menu_bar.addMenu('&View')
         menu_bar.addMenu('&Help')
 
-    def add_attendee(self):
-        attendee_name = self.new_attendee_input.text().strip()
-        if attendee_name:
-            self.attendees_list.addItem(attendee_name)
-            self.new_attendee_input.clear()
+    # def add_attendee(self):
+    #     attendee_name = self.new_attendee_input.text().strip()
+    #     if attendee_name:
+    #         self.attendees_list.addItem(attendee_name)
+    #         self.new_attendee_input.clear()
 
     def on_logo_selection_changed(self, index):
         if self.logo_selection.currentText() == "Upload Logo":
@@ -281,24 +286,15 @@ class DocGeneratorApp(QMainWindow):
         if file_name:
             self.logo_path = file_name
 
-    def update_state_input(self):
-        address = self.company_address_selection.currentText()
-        parts = address.split(' ')
-        if len(parts) >= 3:
-            state = parts[-2]
-            self.state_input.setText(state)
-        else:
-            self.state_input.clear()
-
     def generate_document_from_input(self):
         # Use selected or custom company name
         company_name = self.company_selection.currentText()
         if company_name == "Other...":
             company_name = self.custom_company_input.text()
 
-        # Compile the list of attendees
-        attendees = [self.attendees_list.item(i).text() for i in range(self.attendees_list.count())]
-        attendees_str = ', '.join(attendees)
+        # # Compile the list of attendees
+        # attendees = [self.attendees_list.item(i).text() for i in range(self.attendees_list.count())]
+        # attendees_str = ', '.join(attendees)
 
         # Use selected or custom company address
         company_address = self.company_address_selection.currentText()
@@ -326,14 +322,12 @@ class DocGeneratorApp(QMainWindow):
             'time': meeting_time,
             'meeting_address': meeting_address,
             'chairman_name': self.chairman_name_input.text(),
-            'attendees': attendees_str,
             'year': str(meeting_year),
             'discussion_topics': self.discussion_input.toPlainText(),
             'resolutions': self.resolutions_input.toPlainText(),
             'closing_remarks': self.closing_remarks_input.toPlainText(),
             'closing_time': meeting_time,  
             'company_address': company_address,
-            'state': self.state_input.text()
         }
 
         # Generate the document

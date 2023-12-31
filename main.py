@@ -95,7 +95,7 @@ class DocGenerator:
 
 
 class DocGeneratorApp(QMainWindow):
-    DEFAULT_LOGO_PATH = 'assets/Grow Bliss Logo.png'
+    DEFAULT_LOGO_PATH = 'assets/logo.png'
 
     def __init__(self):
         super().__init__()
@@ -121,7 +121,7 @@ class DocGeneratorApp(QMainWindow):
 
         # Logo Selection
         self.logo_selection = QComboBox()
-        self.logo_selection.addItems(['Grow Bliss LLC Logo', 'Upload Logo'])
+        self.logo_selection.addItems(['Logo', 'Upload Logo'])
         self.logo_selection.currentIndexChanged.connect(self.on_logo_selection_changed)
         form_layout.addRow('Select Logo:', self.logo_selection)
 
@@ -132,7 +132,7 @@ class DocGeneratorApp(QMainWindow):
 
         # Company Selection Combo Box
         self.company_selection = QComboBox()
-        self.company_selection.addItems(['Grow Bliss, LLC', 'Grow Group LLC', 'Grow Management LP', 'Grow Investments LLC', 'Peoples Realty INC', 'Other...'])
+        self.company_selection.addItems(['Ryan Kyle', 'imnotrk', '6AMG', 'Aqua Fish Villa', 'TL Pet Shop', 'Other...'])
         self.company_selection.currentIndexChanged.connect(self.on_company_selection_changed)
         form_layout.addRow('Select Company:', self.company_selection)
 
@@ -145,9 +145,9 @@ class DocGeneratorApp(QMainWindow):
         # Company Address Selection
         self.company_address_selection = QComboBox()
         self.company_address_selection.addItems([
-            '4000 NW 74th St, Coconut Creek FL 33073',
-            '99 Spring Lake Drive #102 Vero Beach FL 33073',
-            '300 Franklin St, Cambridge MA 02139',
+            'Sample address 1, State US 12345',
+            'Sample address 2, State US 12345',
+            'Sample address 3, State US 12345',
             'Other...'
         ])
         form_layout.addRow('Company Address:', self.company_address_selection)
@@ -176,7 +176,7 @@ class DocGeneratorApp(QMainWindow):
         # form_layout.addRow(self.add_attendee_button)
 
         # Chairman Name
-        self.chairman_name_input = QLineEdit('Jeffery James Peoples')
+        self.chairman_name_input = QLineEdit('Ryan Kyle Ocampo')
         form_layout.addRow('Chairman Name:', self.chairman_name_input)
 
         # Separate Date Input
@@ -200,9 +200,9 @@ class DocGeneratorApp(QMainWindow):
         # Meeting Address Selection
         self.meeting_address_selection = QComboBox()
         self.meeting_address_selection.addItems([
-            '4000 NW 74th St, Coconut Creek FL 33073',
-            '99 Spring Lake Drive #102 Vero Beach FL 33073',
-            '300 Franklin St, Cambridge MA 02139',
+            'Sample address 1, State US 12345',
+            'Sample address 2, State US 12345',
+            'Sample address 3, State US 12345',
             'Other...'
         ])
         form_layout.addRow('Meeting Address:', self.meeting_address_selection)
